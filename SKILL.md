@@ -1,76 +1,94 @@
 ---
 name: north-workbench-builder
-description: Create web-based workbenches (dashboards, command centers, workflow UIs) powered by North AI agents and automations. Generates Next.js + React + Tailwind apps with built-in auth, agent chat integration, automation execution, human review flows, and data caching. Use when asked to build a new workbench, dashboard, or workflow app that connects to North.
+description: Generate single-file HTML workbenches powered by North AI agents and automations. Outputs one self-contained HTML file with inline CSS, JavaScript, and the editorial design system. Use when asked to build a dashboard, command center, or workflow UI that connects to North.
 ---
 
 # North Workbench Builder
 
-Build web-based workbenches powered by North AI agents and automations. A workbench is a purpose-built UI that lets users interact with agents, review automation outputs, and take actions — all through a clean, focused interface.
+Generate **single self-contained HTML files** that serve as workbenches for interacting with North AI agents and automations. Everything — HTML, CSS, JavaScript — lives in one file. No build step, no npm, no framework dependencies.
 
 ## Supporting References
 
-- Design system: [design-system/](design-system/)
-- Component templates: [templates/](templates/)
-- Code blocks: [code-blocks/](code-blocks/) — copy-paste patterns for auth, agent chat, automations, caching, UI
-- Examples: [examples/](examples/)
-- API reference: [api-reference/](api-reference/)
+- Design system CSS: [design-system/globals.css](design-system/globals.css)
+- UI component patterns: [code-blocks/ui/README.md](code-blocks/ui/README.md)
+- Agent interaction patterns: [code-blocks/agents/](code-blocks/agents/)
+- API reference: [api-reference/north-api.md](api-reference/north-api.md)
+- Example outputs: [examples/](examples/)
 
 ---
 
-## When to Use This Skill
+## When to Use
 
 Use when the user asks to:
-- Build a dashboard or command center powered by North agents
-- Create a workflow UI with human-in-the-loop review
-- Build an app that reads/writes data through AI agents (Salesforce, Gmail, Slack, etc.)
-- Create a web interface for monitoring and interacting with automations
-- Build any agent-powered web application
+- Build a dashboard or workbench powered by North agents
+- Create a single-page app for a workflow
+- Generate an HTML interface for monitoring automations
+- Build a UI for reviewing agent outputs
+- Create any agent-powered web interface
+
+## Output Format
+
+Always output a **single HTML file** with this structure:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Workbench Name]</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Work+Sans:wght@500;600&family=Space+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Design system + all styles inline */
+  </style>
+</head>
+<body>
+  <!-- Sidebar + content area -->
+  <script>
+    /* All application logic inline */
+  </script>
+</body>
+</html>
+```
+
+---
 
 ## Architecture
 
-Every workbench follows the same architecture:
-
 ```
-┌─────────────────────────────────────────────────┐
-│                    Browser                       │
-│  Next.js App (React + Tailwind)                 │
-│  ┌─────────┐ ┌──────────┐ ┌───────────────┐   │
-│  │ Views   │ │ Hooks    │ │ Data Store    │   │
-│  │ (pages) │ │ (state)  │ │ (localStorage)│   │
-│  └────┬────┘ └────┬─────┘ └───────┬───────┘   │
-│       │           │               │             │
-│       └───────────┼───────────────┘             │
-│                   │                              │
-│          ┌────────┴────────┐                    │
-│          │ API Client      │                    │
-│          │ (northClient.ts)│                    │
-│          └────────┬────────┘                    │
-└───────────────────┼─────────────────────────────┘
-                    │ HTTP (x-north-token header)
-┌───────────────────┼─────────────────────────────┐
-│          ┌────────┴────────┐                    │
-│          │ API Routes      │  Next.js Server    │
-│          │ (/api/north/*)  │                    │
-│          └────────┬────────┘                    │
-└───────────────────┼─────────────────────────────┘
-                    │ HTTP (Bearer auth + optional IAP cookie)
-┌───────────────────┼─────────────────────────────┐
-│              North API                           │
-│  /v2/agents  /v1/chat  /v1/automations          │
-└─────────────────────────────────────────────────┘
+Single HTML File
+├── <style>  — Full design system + component styles
+├── <body>   — Sidebar navigation + content panels
+└── <script> — Auth, API calls, state management, UI updates
 ```
 
 ### Key Principles
 
-1. **Agents are the data layer** — don't call external APIs directly. Chat with agents that have tool access (Salesforce, Gmail, Slack, etc.). The agent handles auth and API complexity.
+1. **One file, everything inline** — no external dependencies except Google Fonts
+2. **Vanilla JS** — no React, no framework. Use `document.getElementById`, template literals, event listeners
+3. **Tab-based navigation** — sidebar buttons show/hide content panels
+4. **Agent calls via fetch** — call North API directly with Bearer auth
+5. **localStorage for persistence** — cache data and auth tokens
+6. **Progressive enhancement** — show placeholder content, populate when data loads
 
-2. **SOQL > natural language** — when querying Salesforce through an agent, provide the exact SOQL query in the prompt. It's 10x faster than asking in natural language.
+---
 
-3. **User-triggered data fetches** — don't auto-fetch on page load. Agent calls can take 30-60 seconds. Show cached data instantly, let users click "Refresh" when they want live data.
+## Design System (Inline CSS)
 
-4. **Cache everything** — all fetched data goes to localStorage with TTL. The app should feel instant on subsequent loads.
+Apply the editorial design system. Copy the CSS block from [design-system/inline-styles.md](design-system/inline-styles.md).
 
-5. **Read-only by default** — agents should read and report, not take actions, unless the user explicitly clicks an action button.
+Key values:
+- Background: `#fbf9f4` (warm paper)
+- Cards: `#ffffff` on paper
+- Primary: `#9e3d19` (coral)
+- Secondary: `#814890` (purple)
+- Text: `#1b1c19`
+- Muted text: `#57423c`
+- Border: `rgba(46,46,46,0.1)`
+- Border radius: `0px` everywhere
+- Headings: `Work Sans`
+- Body: `Inter`
+- Mono/labels: `Space Grotesk`, uppercase, letter-spacing
 
 ---
 
@@ -79,187 +97,242 @@ Every workbench follows the same architecture:
 ### A. Create a New Workbench
 
 1. **Understand the domain** — ask the user:
-   - What data sources? (Salesforce, Gmail, Slack, databases, APIs)
-   - What actions should users take? (update records, send emails, approve items)
-   - Who are the users? (SAs, support agents, analysts, managers)
-   - What's the main daily workflow? (morning review → drill into items → take action → review AI drafts)
+   - What data sources? (Salesforce, Gmail, Slack, etc.)
+   - What should the workbench show?
+   - What actions can users take?
+   - What's the North API base URL?
 
-2. **Design the views** — every workbench needs:
-   - **Home/Today view** — what the user sees first. Summary of what needs attention.
-   - **List view** — browsable list of items (accounts, tickets, documents, etc.)
-   - **Detail view** — drill into a single item with full context + actions
-   - **Outbox** — queue of automation outputs awaiting human review
-   - **Settings** — auth configuration and agent management
+2. **Design the views** — typical workbench has:
+   - **Home/Today** — summary of what needs attention
+   - **List** — browsable items (accounts, tickets, documents)
+   - **Detail** — drill into a single item (shown inline or as modal)
+   - **Outbox** — automation outputs awaiting review
+   - **Settings** — API URL + auth token input
 
-3. **Design the agents** — for each data source:
-   - Create an agent with the appropriate tool (gmail, salesforce, slack, web_search, etc.)
-   - Write comprehensive instructions (see [code-blocks/agents/agent-instructions.md](code-blocks/agents/agent-instructions.md))
-   - Set temperature: 0.1-0.3 for data retrieval, 0.3-0.5 for analysis, 0.5-0.7 for creative drafting
+3. **Generate the HTML** — use the patterns below to build:
+   - CSS design system (copy from inline-styles reference)
+   - Sidebar with navigation tabs
+   - Content panels for each view
+   - JavaScript for API calls, state, and UI updates
+   - Auth setup (token stored in localStorage)
 
-4. **Design the automations** — for multi-step workflows:
-   - Use the north-automation-authoring skill to create .north-automation.json files
-   - Include Human Review nodes for any action that needs approval
-   - Design the output_template to render cleanly in the Outbox
-
-5. **Generate the code** using templates from this skill:
-   - Start with [templates/](templates/) for the app shell
-   - Use [code-blocks/](code-blocks/) for specific features
-   - Apply [design-system/](design-system/) for consistent styling
-
-6. **Stack**: Next.js 16+ with App Router, React 19, Tailwind CSS 4, shadcn/ui components
+4. **Output one file** — the complete HTML file ready to open in a browser
 
 ---
 
-### B. Code Generation Patterns
+### B. JavaScript Patterns
 
-When generating workbench code, follow these patterns:
+#### Auth & API Setup
+```javascript
+const CONFIG = {
+  baseUrl: localStorage.getItem('north_url') || 'https://demo.north.cohere.com/api',
+  token: localStorage.getItem('north_token') || '',
+};
 
-#### Project Structure
-```
-app/
-  layout.tsx              # Root layout + fonts
-  globals.css             # Design system CSS variables
-  page.tsx                # Main app shell with view routing
-  api/north/              # API routes proxying to North
-    signin/route.ts
-    agents/route.ts
-    chat/route.ts
-    executions/route.ts
-    executions/[id]/route.ts
-    executions/[id]/nodes/[nodeId]/route.ts
-
-src/
-  api/
-    northClient.ts        # Client HTTP + token management
-    northServer.ts        # Server-side North API proxy
-    agents.ts             # Agent CRUD + chat
-    agentService.ts       # Domain-specific agent prompts
-    executions.ts         # Execution management
-  hooks/
-    usePolling.ts         # Generic polling hook
-    use[Domain].ts        # Domain-specific data hooks with caching
-  components/
-    [view]-view.tsx       # One per view
-    [feature]-panel.tsx   # Feature-specific panels
-  lib/
-    data-store.ts         # Centralized localStorage cache
-    [domain]-utils.ts     # Domain-specific helpers
-  types/
-    north.ts              # North API types
-
-components/
-  sidebar.tsx             # Navigation sidebar
-  ui/                     # shadcn/ui components
-```
-
-#### View Pattern
-Every view follows this structure:
-```tsx
-export function [Name]View({ data, onAction, agentId }: Props) {
-  const [state, setState] = useState(initialState)
-
-  // Load from cache on mount
-  useEffect(() => {
-    const cached = store.[type].get()
-    if (cached) setState(cached.data)
-  }, [])
-
-  // User-triggered refresh
-  const refresh = useCallback(async () => {
-    setLoading(true)
-    const result = await askAgent(agentId, prompt)
-    setState(result)
-    store.[type].set(result)  // Cache
-    setLoading(false)
-  }, [agentId])
-
-  return (
-    <div className="flex-1 overflow-auto p-6 space-y-6">
-      {/* Header with title + action buttons */}
-      {/* Content cards */}
-      {/* Empty/loading/error states */}
-    </div>
-  )
+async function northAPI(method, path, body) {
+  const res = await fetch(CONFIG.baseUrl + path, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + CONFIG.token,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
 }
 ```
 
-#### Agent Call Pattern
-```tsx
-// In agentService.ts — always provide specific prompts
-export async function fetch[Items](agentId: string): Promise<Result> {
-  const result = await askAgent(agentId, `
-    [Specific query or SOQL]
-    Return as JSON: { "items": [...] }
-    Return ONLY the JSON.
-  `)
-  return parseResult(result)
+#### Chat with Agent
+```javascript
+async function askAgent(agentId, prompt) {
+  const res = await northAPI('POST', '/v1/chat', {
+    messages: [{ role: 'user', content: prompt }],
+    agent: { id: agentId },
+    stream: false,
+  });
+  const text = res.messages?.[res.messages.length - 1]?.content || '';
+  const content = typeof text === 'string' ? text : Array.isArray(text)
+    ? text.map(t => t.text || t.content || '').join('') : '';
+  // Try to extract JSON
+  try {
+    const match = content.match(/```json?\s*([\s\S]*?)```/);
+    return match ? JSON.parse(match[1]) : JSON.parse(content);
+  } catch {
+    return { _raw: content };
+  }
 }
 ```
 
-#### Caching Pattern
-```tsx
-// In data-store.ts
-export const store = {
-  [type]: {
-    get: () => get<Type>("type_key"),
-    set: (data: Type) => set("type_key", data, undefined, TTL_MS),
-  },
+#### Tab Navigation
+```javascript
+function showTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tabId).style.display = 'block';
+  document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+}
+```
+
+#### Render List
+```javascript
+function renderItems(containerId, items, template) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = items.length === 0
+    ? '<div class="empty-state">No items</div>'
+    : items.map(template).join('');
+}
+```
+
+#### Loading State
+```javascript
+function setLoading(containerId, loading) {
+  const el = document.getElementById(containerId);
+  if (loading) {
+    el.innerHTML = '<div class="loading"><div class="spinner"></div> Loading...</div>';
+  }
 }
 ```
 
 ---
 
-### C. Design System Application
+### C. HTML Structure Pattern
 
-Apply the editorial design system from [design-system/](design-system/):
+```html
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">WB</div>
+        <div class="logo-text">
+          <div class="logo-title">Workbench</div>
+          <div class="logo-org">COMPANY</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="today" onclick="showTab('today')">
+          <span class="nav-icon">☀</span>
+          <span class="nav-label">Today</span>
+        </button>
+        <button class="nav-item" data-tab="items" onclick="showTab('items')">
+          <span class="nav-icon">☰</span>
+          <span class="nav-label">Items</span>
+        </button>
+        <!-- More tabs -->
+      </nav>
+      <div class="sidebar-footer">
+        <button class="nav-item" data-tab="settings" onclick="showTab('settings')">
+          <span class="nav-icon">⚙</span>
+          <span class="nav-label">Settings</span>
+        </button>
+      </div>
+    </aside>
 
-1. Copy `design-system/globals.css` → `app/globals.css`
-2. Set fonts in `layout.tsx`: Work Sans (headings), Inter (body), Space Grotesk (mono/labels)
-3. All border-radius: 0px (sharp corners)
-4. Cards: white (#fff) on paper (#fbf9f4) background
-5. Primary: coral (#9e3d19), Secondary: purple (#814890)
-6. Badges: Space Grotesk, uppercase, letter-spacing
+    <!-- Content -->
+    <main class="content">
+      <div id="tab-today" class="tab-content" style="display:block">
+        <!-- Today view content -->
+      </div>
+      <div id="tab-items" class="tab-content" style="display:none">
+        <!-- Items list content -->
+      </div>
+      <div id="tab-settings" class="tab-content" style="display:none">
+        <!-- Settings content -->
+      </div>
+    </main>
+  </div>
+</body>
+```
 
 ---
 
-### D. Auth Setup
+### D. Component HTML Patterns
 
-Support three auth modes (see [code-blocks/auth/](code-blocks/auth/)):
+#### Metric Card
+```html
+<div class="metric-card">
+  <div class="metric-label">Pipeline Value</div>
+  <div class="metric-value">$2.4M</div>
+  <div class="metric-sub">12 active deals</div>
+</div>
+```
 
-1. **Email/Password** — for demo North instances with /v1/signin
-2. **Token + IAP** — for production behind Google IAP
-3. **Full Cookies** — paste entire browser cookie string (easiest for IAP)
+#### List Item (clickable)
+```html
+<div class="list-item" onclick="showDetail('${item.id}')">
+  <div class="list-dot" style="background:${color}"></div>
+  <div class="list-content">
+    <div class="list-title">${item.title}</div>
+    <div class="list-subtitle">${item.subtitle}</div>
+  </div>
+  <div class="list-badge ${badgeClass}">${item.status}</div>
+</div>
+```
 
-The Settings page should include all three options.
+#### Card with Header
+```html
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Section Title</h3>
+    <button class="btn btn-outline btn-sm" onclick="refresh()">Refresh</button>
+  </div>
+  <div class="card-body" id="content-area">
+    <!-- Dynamic content -->
+  </div>
+</div>
+```
+
+#### Status Badge
+```html
+<span class="badge badge-success">HEALTHY</span>
+<span class="badge badge-warning">AT RISK</span>
+<span class="badge badge-error">CRITICAL</span>
+<span class="badge badge-info">IN REVIEW</span>
+```
+
+#### Empty State
+```html
+<div class="empty-state">
+  <div class="empty-icon">📋</div>
+  <div class="empty-title">No items yet</div>
+  <div class="empty-text">Click refresh to load data from your agents.</div>
+  <button class="btn" onclick="refresh()">Get Started</button>
+</div>
+```
+
+#### Settings Form (Auth)
+```html
+<div class="form-group">
+  <label class="form-label">North API URL</label>
+  <input type="url" class="form-input" id="api-url"
+    value="${CONFIG.baseUrl}" onchange="saveConfig()">
+</div>
+<div class="form-group">
+  <label class="form-label">Auth Token</label>
+  <input type="password" class="form-input" id="api-token"
+    placeholder="Paste your authToken..."
+    onchange="saveConfig()">
+</div>
+<button class="btn" onclick="testConnection()">Test Connection</button>
+```
 
 ---
 
-### E. Human Review (Outbox) Pattern
+## Checklist
 
-For automations with Human Review nodes:
+Before outputting the HTML file:
 
-1. Poll `GET /v1/automations/executions?awaiting_human_review=true`
-2. For each pending execution, find the review node (status: "waiting")
-3. Fetch review details: `GET .../nodes/{nodeId}/review` → gets `rendered_text` + `inputs`
-4. Display the rendered content + input fields (select dropdowns, text areas)
-5. Submit: `POST .../nodes/{nodeId}/review` with `{ inputs: { inputId: { type, value } } }`
-
-See [code-blocks/automations/human-review.ts](code-blocks/automations/human-review.ts) for the complete pattern.
-
----
-
-## Checklist for New Workbenches
-
-- [ ] Next.js project with App Router
-- [ ] Design system CSS applied (globals.css)
-- [ ] Fonts loaded (Work Sans, Inter, Space Grotesk)
-- [ ] Auth flow (Settings page with 3 auth modes)
-- [ ] API routes proxying to North (/api/north/*)
-- [ ] Agent configs defined with comprehensive instructions
-- [ ] Home view with summary/briefing
-- [ ] List view with search/filter
-- [ ] Detail view with actions
-- [ ] Outbox for human review
-- [ ] Data cached in localStorage with TTL
-- [ ] Error handling (401 detection, timeout messages)
-- [ ] Loading states (user-triggered, not auto-fetch)
+- [ ] Single file, no external dependencies (except Google Fonts CDN)
+- [ ] Design system CSS inline (colors, typography, shapes)
+- [ ] Sidebar with tab navigation
+- [ ] Settings tab with API URL + token inputs
+- [ ] At least one data-driven view that calls an agent
+- [ ] Loading states and empty states
+- [ ] Error handling for API failures
+- [ ] Token stored in localStorage
+- [ ] Data cached in localStorage
+- [ ] All border-radius: 0px
+- [ ] Headings use Work Sans
+- [ ] Labels/badges use Space Grotesk uppercase
+- [ ] No shadows on cards (border only)
